@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::{Result, DidDocument};
+use crate::Result;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum WalletProvider {
@@ -36,14 +36,14 @@ pub struct WalletResponse {
 }
 
 pub struct WalletIntegration {
-    supported_wallets: Vec<WalletProvider>,
+    _supported_wallets: Vec<WalletProvider>,
     registered_credentials: HashMap<String, WalletCredential>,
 }
 
 impl WalletIntegration {
     pub fn new() -> Self {
         Self {
-            supported_wallets: vec![
+            _supported_wallets: vec![
                 WalletProvider::Apple,
                 WalletProvider::Google,
                 WalletProvider::Samsung,

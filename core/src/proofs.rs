@@ -22,13 +22,13 @@ pub enum ProofStatus {
 pub async fn create_age_verification_proof(
     user_age: u8,
     min_age: u8,
-    wallet_integration: &WalletIntegration,
+    _wallet_integration: &WalletIntegration,
 ) -> Result<(AgeProof, WalletResponse)> {
     // Generate ZK proof without revealing actual age
     let zk_proof = ZkProofSystem::prove_age_over(user_age, min_age)?;
     
     // Request selective disclosure from wallet (just age verification, not birthdate)
-    let disclosure_request = SelectiveDisclosureRequest {
+    let _disclosure_request = SelectiveDisclosureRequest {
         fields_requested: vec!["age_over_18".to_string()],
         purpose: "airline_age_verification".to_string(),
         requester_did: "did:proofzk:airline-system".to_string(),
@@ -60,13 +60,13 @@ pub async fn create_age_verification_proof(
 pub async fn create_genetic_marker_proof(
     user_markers: &[String],
     requested_markers: &[String],
-    wallet_integration: &WalletIntegration,
+    _wallet_integration: &WalletIntegration,
 ) -> Result<(GeneticMarkerProof, WalletResponse)> {
     // Generate ZK proof of specific markers without revealing full genome
     let zk_proof = ZkProofSystem::prove_genetic_markers(user_markers, requested_markers)?;
     
     // Request selective disclosure from wallet
-    let disclosure_request = SelectiveDisclosureRequest {
+    let _disclosure_request = SelectiveDisclosureRequest {
         fields_requested: requested_markers.iter().map(|m| format!("genetic_marker_{}", m.to_lowercase())).collect(),
         purpose: "personalized_health_recommendations".to_string(),
         requester_did: "did:proofzk:genomics-service".to_string(),

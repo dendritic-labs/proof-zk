@@ -1,10 +1,11 @@
 use serde::{Deserialize, Serialize};
-use ed25519_dalek::{Keypair, PublicKey, Signature, Signer, Verifier};
+use ed25519_dalek::{SigningKey, VerifyingKey, Signature, Signer, Verifier};
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use crate::{DidDocument, PublicKeyEntry, ServiceEndpoint, Result};
 use std::collections::HashMap;
 use rand::rngs::OsRng;
+use rand::RngCore;
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -21,7 +22,7 @@ pub struct DidIdentity {
     pub did: String,
     pub method: DidMethod,
     #[serde(skip)] // Don't serialize private keys
-    pub keypair: Option<Keypair>,
+    pub signing_key: Option<SigningKey>,
     pub document: DidDocument,
 }
 
@@ -30,7 +31,7 @@ impl Clone for DidIdentity {
         Self {
             did: self.did.clone(),
             method: self.method.clone(),
-            keypair: None, // Don't clone private keys for security
+            signing_key: None, // Don't clone private keys for security
             document: self.document.clone(),
         }
     }
@@ -39,8 +40,10 @@ impl Clone for DidIdentity {
 impl DidIdentity {
     /// Create a new DID:key identity (cryptographically derived)
     pub fn new_did_key() -> Result<Self> {
-        let keypair = Keypair::generate(&mut OsRng);
-        let public_key_bytes = keypair.public.to_bytes();
+        let mut secret_bytes = [0u8; 32];
+        OsRng.fill_bytes(&mut secret_bytes);
+        let signing_key = SigningKey::from_bytes(&secret_bytes);
+        let public_key_bytes = signing_key.verifying_key().to_bytes();
         
         // Create DID:key according to spec
         let multicodec_prefix = [0xed, 0x01]; // ed25519-pub multicodec
@@ -69,15 +72,17 @@ impl DidIdentity {
         Ok(DidIdentity {
             did,
             method: DidMethod::Key,
-            keypair: Some(keypair),
+            signing_key: Some(signing_key),
             document,
         })
     }
 
     /// Create a DID:web identity (web-hosted)
     pub fn new_did_web(domain: &str, path: Option<&str>) -> Result<Self> {
-        let keypair = Keypair::generate(&mut OsRng);
-        let public_key_bytes = keypair.public.to_bytes();
+        let mut secret_bytes = [0u8; 32];
+        OsRng.fill_bytes(&mut secret_bytes);
+        let signing_key = SigningKey::from_bytes(&secret_bytes);
+        let public_key_bytes = signing_key.verifying_key().to_bytes();
         
         let did = match path {
             Some(p) => format!("did:web:{}:{}", domain, p.replace('/', ":")),
@@ -110,15 +115,17 @@ impl DidIdentity {
         Ok(DidIdentity {
             did,
             method: DidMethod::Web,
-            keypair: Some(keypair),
+            signing_key: Some(signing_key),
             document,
         })
     }
 
     /// Create our custom ProofZK DID (for backwards compatibility)
     pub fn new() -> Result<Self> {
-        let keypair = Keypair::generate(&mut OsRng);
-        let public_key = BASE64.encode(keypair.public.to_bytes());
+        let mut secret_bytes = [0u8; 32];
+        OsRng.fill_bytes(&mut secret_bytes);
+        let signing_key = SigningKey::from_bytes(&secret_bytes);
+        let public_key = BASE64.encode(signing_key.verifying_key().to_bytes());
         let did = format!("did:proofzk:{}", Uuid::new_v4());
         
         let document = DidDocument {
@@ -140,7 +147,7 @@ impl DidIdentity {
         Ok(DidIdentity {
             did,
             method: DidMethod::ProofZK,
-            keypair: Some(keypair),
+            signing_key: Some(signing_key),
             document,
         })
     }
@@ -151,13 +158,13 @@ impl DidIdentity {
         Self {
             did: document.id.clone(),
             method,
-            keypair: None, // External DID, no private key
+            signing_key: None, // External DID, no private key
             document,
         }
     }
 
     pub fn sign_message(&self, message: &[u8]) -> Result<Vec<u8>> {
-        match &self.keypair {
+        match &self.signing_key {
             Some(kp) => {
                 let signature = kp.sign(message);
                 Ok(signature.to_bytes().to_vec())
@@ -179,10 +186,11 @@ impl DidIdentity {
                 }
             };
             
-            let public_key = PublicKey::from_bytes(&pk_bytes[pk_bytes.len().saturating_sub(32)..])?; // Last 32 bytes for ed25519
-            let sig = Signature::from_bytes(signature)?;
+            let pk_bytes = &pk_bytes[pk_bytes.len().saturating_sub(32)..];
+            let verifying_key = VerifyingKey::from_bytes(pk_bytes.try_into().map_err(|_| "Invalid key length")?)?;
+            let sig = Signature::from_slice(signature)?;
             
-            Ok(public_key.verify(message, &sig).is_ok())
+            Ok(verifying_key.verify(message, &sig).is_ok())
         } else {
             Err("No public key found in DID document".into())
         }
