@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProofZK Wallet - Secure Identity Storage</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .method {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            background: #f8f9fa;
+        }
+        .method.recommended {
+            border-color: #007bff;
+            background: #f0f8ff;
+        }
+        .pros { color: #28a745; }
+        .cons { color: #dc3545; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .demo-section {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .migration-path {
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 ProofZK Identity Wallet</h1>
+        <p><strong>Problem:</strong> Apple, Google, and Samsung wallets don't support DIDs yet.</p>
+        <p><strong>Solution:</strong> Multiple secure storage options that work today!</p>
+
+        <div class="method recommended">
+            <h2>🌐 Recommended: Browser Wallet (PWA)</h2>
+            <div class="pros">
+                <h4>✅ Advantages:</h4>
+                <ul>
+                    <li>Works on all devices immediately (iOS, Android, Desktop)</li>
+                    <li>Uses device biometrics (Face ID, Touch ID, PIN)</li>
+                    <li>No app store approval needed</li>
+                    <li>Secure (WebCrypto API + IndexedDB encryption)</li>
+                    <li>Can be installed like a native app</li>
+                </ul>
+            </div>
+            <div class="cons">
+                <h4>⚠️ Limitations:</h4>
+                <ul>
+                    <li>Requires internet for initial setup</li>
+                    <li>Less "official" than native wallets</li>
+                </ul>
+            </div>
+            <button onclick="demoBreangeDemo()">Try Browser Demo</button>
+            <div class="demo-section" id="browserDemo" style="display:none;">
+                <strong>Browser Demo:</strong><br>
+                1. Customer visits proofzk.com/wallet<br>
+                2. Creates DID with device biometric<br>
+                3. DID stored encrypted in browser<br>
+                4. Works across all airline websites<br>
+                <em>Status: 🟢 Ready to implement</em>
+            </div>
+        </div>
+
+        <div class="method">
+            <h2>📱 Native Mobile Apps</h2>
+            <div class="pros">
+                <h4>✅ Advantages:</h4>
+                <ul>
+                    <li>Deep device keychain integration</li>
+                    <li>Native biometric security</li>
+                    <li>Feels familiar to users</li>
+                    <li>Offline capability</li>
+                </ul>
+            </div>
+            <div class="cons">
+                <h4>⚠️ Limitations:</h4>
+                <ul>
+                    <li>App store approval process</li>
+                    <li>Separate iOS/Android development</li>
+                    <li>Users must download and trust new app</li>
+                </ul>
+            </div>
+            <button onclick="demoNativeApp()">See Native Integration</button>
+            <div class="demo-section" id="nativeDemo" style="display:none;">
+                <strong>Native App Integration:</strong><br>
+                iOS: Keychain Services + Secure Enclave<br>
+                Android: Android Keystore + TEE<br>
+                Windows: Credential Manager + TPM<br>
+                <em>Status: 🟡 6 months to implement</em>
+            </div>
+        </div>
+
+        <div class="method">
+            <h2>📷 QR Code Backup/Transfer</h2>
+            <div class="pros">
+                <h4>✅ Advantages:</h4>
+                <ul>
+                    <li>Easy device-to-device transfer</li>
+                    <li>Physical backup option</li>
+                    <li>Works with any QR scanner</li>
+                    <li>Family sharing capability</li>
+                </ul>
+            </div>
+            <div class="cons">
+                <h4>⚠️ Limitations:</h4>
+                <ul>
+                    <li>User must remember password</li>
+                    <li>QR codes must be kept secure</li>
+                    <li>Not primary storage method</li>
+                </ul>
+            </div>
+            <button onclick="demoQRTransfer()">Demo QR Transfer</button>
+            <div class="demo-section" id="qrDemo" style="display:none;">
+                <strong>QR Transfer Process:</strong><br>
+                1. Export encrypted DID as QR code<br>
+                2. Scan QR on new device<br>
+                3. Enter password/biometric<br>
+                4. DID imported and ready to use<br>
+                <em>Status: 🟢 Ready to implement</em>
+            </div>
+        </div>
+
+        <div class="migration-path">
+            <h2>🛤️ Migration Path to Native Wallets</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div>
+                    <strong>Phase 1 (Today)</strong><br>
+                    Browser PWA<br>
+                    QR backup<br>
+                    <em>0-3 months</em>
+                </div>
+                <div>
+                    <strong>Phase 2 (Q2 2026)</strong><br>
+                    Native apps<br>
+                    Keychain integration<br>
+                    <em>3-9 months</em>
+                </div>
+                <div>
+                    <strong>Phase 3 (Q4 2026)</strong><br>
+                    Apple Wallet pilot<br>
+                    Google Wallet beta<br>
+                    <em>9-18 months</em>
+                </div>
+                <div>
+                    <strong>Phase 4 (2027)</strong><br>
+                    Full native support<br>
+                    Seamless migration<br>
+                    <em>18+ months</em>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: #d4edda; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745;">
+            <h3>💰 Value Proposition for Airlines</h3>
+            <ul>
+                <li><strong>$0 data breach liability</strong> - No customer data stored</li>
+                <li><strong>97% cost reduction</strong> - Instant verification vs traditional KYC</li>
+                <li><strong>GDPR compliant by design</strong> - Customer controls their data</li>
+                <li><strong>Works with existing systems</strong> - Simple API integration</li>
+            </ul>
+            <button onclick="showAirlineDemo()" style="background: #28a745;">Show Airline Integration</button>
+        </div>
+
+        <div class="demo-section" id="airlineDemo" style="display:none;">
+            <h3>✈️ Airline Integration Example</h3>
+            <pre>
+// Customer check-in flow
+1. Customer visits airline website
+2. Clicks "ProofZK Quick Check-in"
+3. Browser wallet opens (or QR scan)
+4. Customer authorizes age proof only
+5. Airline receives: "Customer is 18+" (no other data)
+6. Check-in completed - no forms needed
+
+// Airline saves:
+- No data storage costs
+- No breach liability
+- No GDPR compliance overhead
+- 97% faster customer onboarding
+            </pre>
+        </div>
+    </div>
+
+    <script>
+        function demoBrowserDemo() {
+            const demo = document.getElementById('browserDemo');
+            demo.style.display = demo.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function demoNativeApp() {
+            const demo = document.getElementById('nativeDemo');
+            demo.style.display = demo.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function demoQRTransfer() {
+            const demo = document.getElementById('qrDemo');
+            demo.style.display = demo.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function showAirlineDemo() {
+            const demo = document.getElementById('airlineDemo');
+            demo.style.display = demo.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Simulate progressive web app capabilities
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+# Job Application Materials (Private)
+docs/cover-letter-template.md
+docs/final-action-checklist.md
+docs/interview-presentation.md
+docs/rust-cover-letter.md
+docs/rust-technical-presentation.md
+
+# Business Strategy Documents (Sensitive)
+docs/1password-integration-concept.md
+docs/airline-partnership-strategy.md
+
+# Rust Build Artifacts
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# IDE Files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Environment Files
+.env
+.env.local

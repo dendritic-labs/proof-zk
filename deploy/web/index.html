@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProofZK - Privacy-First Identity for Airlines</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5' stroke='%234F46E5' stroke-width='2' fill='none'/%3E%3C/svg%3E">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #4F46E5;
+            text-decoration: none;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: #4a5568;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: #4F46E5;
+        }
+        
+        .cta-button {
+            background: #4F46E5;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+        
+        .cta-button:hover {
+            background: #4338CA;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+        }
+        
+        /* Hero Section */
+        .hero {
+            margin-top: 80px;
+            padding: 4rem 0;
+            text-align: center;
+            color: white;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-primary {
+            background: white;
+            color: #4F46E5;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        /* Problem Section */
+        .problem-section {
+            background: white;
+            padding: 4rem 0;
+        }
+        
+        .problem-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+        
+        .problem-content h2 {
+            font-size: 2.5rem;
+            color: #1a1a1a;
+            margin-bottom: 1.5rem;
+        }
+        
+        .problem-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .stat-item {
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            border-left: 4px solid #ef4444;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ef4444;
+        }
+        
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        /* Solution Section */
+        .solution-section {
+            background: #f8fafc;
+            padding: 4rem 0;
+        }
+        
+        .solution-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+        
+        .solution-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .solution-stat {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            border-left: 4px solid #10b981;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .solution-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #10b981;
+        }
+        
+        /* ROI Calculator */
+        .roi-section {
+            background: white;
+            padding: 4rem 0;
+        }
+        
+        .roi-calculator {
+            background: #f8fafc;
+            padding: 2rem;
+            border-radius: 16px;
+            margin-top: 2rem;
+        }
+        
+        .calculator-input {
+            margin-bottom: 2rem;
+        }
+        
+        .calculator-input label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .calculator-input input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .calculator-input input:focus {
+            outline: none;
+            border-color: #4F46E5;
+        }
+        
+        .roi-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .roi-result {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .roi-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #4F46E5;
+        }
+        
+        /* Features Section */
+        .features-section {
+            background: #1f2937;
+            color: white;
+            padding: 4rem 0;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* Contact Section */
+        .contact-section {
+            background: white;
+            padding: 4rem 0;
+            text-align: center;
+        }
+        
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .contact-card {
+            background: #f8fafc;
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+        }
+        
+        /* Footer */
+        .footer {
+            background: #1f2937;
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .problem-grid,
+            .solution-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav container">
+            <a href="#" class="logo">ProofZK</a>
+            <ul class="nav-links">
+                <li><a href="#problem">Problem</a></li>
+                <li><a href="#solution">Solution</a></li>
+                <li><a href="#roi">ROI Calculator</a></li>
+                <li><a href="#demo">Demo</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <a href="#demo" class="cta-button">Try Demo</a>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Stop Storing Customer Data.<br>Start Proving It.</h1>
+            <p>ProofZK eliminates data theft risk for airlines through zero-knowledge identity verification. Prove customer eligibility without storing sensitive information.</p>
+            <div class="hero-buttons">
+                <a href="#demo" class="btn-primary">View Live Demo</a>
+                <a href="#contact" class="btn-secondary">Schedule Partnership Call</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section id="problem" class="problem-section">
+        <div class="container">
+            <div class="problem-grid">
+                <div class="problem-content">
+                    <h2>Airlines Are Data Theft Targets</h2>
+                    <p>Every passenger verification requires storing sensitive personal data, making airlines attractive targets for cybercriminals. One breach can cost millions and destroy customer trust.</p>
+                    
+                    <div class="problem-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">$4.45M</div>
+                            <div class="stat-label">Average data breach cost</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">86%</div>
+                            <div class="stat-label">Breaches involve personal data</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">245 days</div>
+                            <div class="stat-label">Average time to detect breach</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">$15</div>
+                            <div class="stat-label">Cost per passenger verification</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="problem-visual">
+                    <svg viewBox="0 0 400 300" style="width: 100%; height: auto;">
+                        <defs>
+                            <linearGradient id="dangerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#ef4444;stop-opacity:0.8" />
+                                <stop offset="100%" style="stop-color:#dc2626;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        
+                        <!-- Server -->
+                        <rect x="150" y="100" width="100" height="80" rx="8" fill="url(#dangerGrad)" stroke="#b91c1c" stroke-width="2"/>
+                        <text x="200" y="125" text-anchor="middle" fill="white" font-size="12" font-weight="bold">AIRLINE</text>
+                        <text x="200" y="140" text-anchor="middle" fill="white" font-size="12">DATABASE</text>
+                        <text x="200" y="155" text-anchor="middle" fill="white" font-size="10">📄 Passports</text>
+                        <text x="200" y="170" text-anchor="middle" fill="white" font-size="10">🎂 Birth Dates</text>
+                        
+                        <!-- Hackers -->
+                        <circle cx="80" cy="140" r="25" fill="#7f1d1d" stroke="#ef4444" stroke-width="2"/>
+                        <text x="80" y="145" text-anchor="middle" fill="white" font-size="20">💀</text>
+                        
+                        <circle cx="320" cy="140" r="25" fill="#7f1d1d" stroke="#ef4444" stroke-width="2"/>
+                        <text x="320" y="145" text-anchor="middle" fill="white" font-size="20">💀</text>
+                        
+                        <!-- Attack arrows -->
+                        <path d="M105 140 L145 140" stroke="#ef4444" stroke-width="3" marker-end="url(#arrowhead)"/>
+                        <path d="M255 140 L295 140" stroke="#ef4444" stroke-width="3" marker-end="url(#arrowhead)"/>
+                        
+                        <!-- Warning text -->
+                        <text x="200" y="220" text-anchor="middle" fill="#dc2626" font-size="14" font-weight="bold">CONSTANT ATTACK TARGET</text>
+                        <text x="200" y="240" text-anchor="middle" fill="#7f1d1d" font-size="12">All customer data at risk</text>
+                        
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+                             refX="0" refY="3.5" orient="auto">
+                              <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution Section -->
+    <section id="solution" class="solution-section">
+        <div class="container">
+            <div class="solution-grid">
+                <div class="solution-visual">
+                    <svg viewBox="0 0 400 300" style="width: 100%; height: auto;">
+                        <defs>
+                            <linearGradient id="safeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#10b981;stop-opacity:0.8" />
+                                <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        
+                        <!-- ProofZK Server -->
+                        <rect x="150" y="100" width="100" height="80" rx="8" fill="url(#safeGrad)" stroke="#059669" stroke-width="2"/>
+                        <text x="200" y="125" text-anchor="middle" fill="white" font-size="12" font-weight="bold">PROOFZK</text>
+                        <text x="200" y="140" text-anchor="middle" fill="white" font-size="12">VERIFICATION</text>
+                        <text x="200" y="155" text-anchor="middle" fill="white" font-size="10">✅ Age Proof</text>
+                        <text x="200" y="170" text-anchor="middle" fill="white" font-size="10">🛡️ No Data Stored</text>
+                        
+                        <!-- Customer with wallet -->
+                        <circle cx="80" cy="140" r="25" fill="#065f46" stroke="#10b981" stroke-width="2"/>
+                        <text x="80" y="145" text-anchor="middle" fill="white" font-size="20">👤</text>
+                        <text x="80" y="190" text-anchor="middle" fill="#059669" font-size="10" font-weight="bold">Customer Wallet</text>
+                        
+                        <!-- Airline -->
+                        <circle cx="320" cy="140" r="25" fill="#065f46" stroke="#10b981" stroke-width="2"/>
+                        <text x="320" y="145" text-anchor="middle" fill="white" font-size="20">✈️</text>
+                        <text x="320" y="190" text-anchor="middle" fill="#059669" font-size="10" font-weight="bold">Airline</text>
+                        
+                        <!-- Safe arrows -->
+                        <path d="M105 140 L145 140" stroke="#10b981" stroke-width="3" marker-end="url(#safeArrow)"/>
+                        <path d="M255 140 L295 140" stroke="#10b981" stroke-width="3" marker-end="url(#safeArrow)"/>
+                        
+                        <!-- Shield -->
+                        <circle cx="200" cy="50" r="20" fill="#10b981" stroke="#059669" stroke-width="2"/>
+                        <text x="200" y="57" text-anchor="middle" fill="white" font-size="16">🛡️</text>
+                        
+                        <!-- Success text -->
+                        <text x="200" y="220" text-anchor="middle" fill="#059669" font-size="14" font-weight="bold">ZERO DATA STORAGE</text>
+                        <text x="200" y="240" text-anchor="middle" fill="#065f46" font-size="12">Nothing to steal</text>
+                        
+                        <defs>
+                            <marker id="safeArrow" markerWidth="10" markerHeight="7" 
+                             refX="0" refY="3.5" orient="auto">
+                              <polygon points="0 0, 10 3.5, 0 7" fill="#10b981" />
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="solution-content">
+                    <h2>ProofZK: Privacy-First Verification</h2>
+                    <p>Instead of storing customer data, ProofZK enables customers to prove eligibility through zero-knowledge proofs. Airlines get verification without the liability.</p>
+                    
+                    <div class="solution-stats">
+                        <div class="solution-stat">
+                            <div class="solution-number">97%</div>
+                            <div class="stat-label">Cost reduction per verification</div>
+                        </div>
+                        <div class="solution-stat">
+                            <div class="solution-number">0</div>
+                            <div class="stat-label">Customer data stored</div>
+                        </div>
+                        <div class="solution-stat">
+                            <div class="solution-number">3 min</div>
+                            <div class="stat-label">Average time saved</div>
+                        </div>
+                        <div class="solution-stat">
+                            <div class="solution-number">$0.50</div>
+                            <div class="stat-label">Cost per verification</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ROI Calculator -->
+    <section id="roi" class="roi-section">
+        <div class="container">
+            <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 1rem;">Calculate Your Savings</h2>
+            <p style="text-align: center; color: #64748b; margin-bottom: 2rem;">See how much ProofZK could save your airline</p>
+            
+            <div class="roi-calculator">
+                <div class="calculator-input">
+                    <label for="passengers">Annual Passenger Verifications:</label>
+                    <input type="number" id="passengers" value="1000000" min="1000" max="100000000" onchange="calculateROI()">
+                </div>
+                
+                <div class="roi-results" id="roiResults">
+                    <!-- Results will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 1rem;">Built for Airlines</h2>
+            <p style="text-align: center; opacity: 0.9; margin-bottom: 2rem;">Enterprise-grade features designed for aviation security requirements</p>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Wallet Integration</h3>
+                    <p>Works with Apple Wallet, Google Wallet, and Samsung Pay. No new app required for customers.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Zero-Knowledge Proofs</h3>
+                    <p>Cryptographically prove customer eligibility without revealing or storing personal data.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Instant Verification</h3>
+                    <p>Sub-second verification times with biometric authentication and offline capability.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Regulatory Compliance</h3>
+                    <p>GDPR, CCPA, and aviation security compliant by design. No data to breach or regulate.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔧</div>
+                    <h3>Easy Integration</h3>
+                    <p>RESTful API integration. Deploy in days, not months. Minimal changes to existing systems.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Analytics Dashboard</h3>
+                    <p>Real-time verification metrics, cost savings tracking, and compliance reporting.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" style="background: white; padding: 4rem 0; text-align: center;">
+        <div class="container">
+            <h2 style="font-size: 2.5rem; margin-bottom: 1rem;">Experience ProofZK</h2>
+            <p style="color: #64748b; margin-bottom: 3rem;">Try our interactive airline demo with real biometric verification</p>
+            
+            <div style="background: #f8fafc; padding: 3rem; border-radius: 16px; max-width: 600px; margin: 0 auto;">
+                <h3 style="margin-bottom: 2rem; color: #4F46E5;">Live Demo Environment</h3>
+                <p style="margin-bottom: 2rem; color: #64748b;">Test age verification and passport checking with your device's biometric sensors</p>
+                <a href="/airline-demo.html" class="btn-primary" style="display: inline-block; margin-bottom: 1rem;">Launch Interactive Demo</a>
+                <div style="font-size: 0.9rem; color: #64748b;">
+                    <p>✅ Works with Face ID, Touch ID, Windows Hello</p>
+                    <p>✅ No data stored or transmitted</p>
+                    <p>✅ Real cost calculations</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+        <div class="container">
+            <h2 style="font-size: 2.5rem; margin-bottom: 1rem;">Ready to Partner?</h2>
+            <p style="color: #64748b; margin-bottom: 3rem;">Let's discuss how ProofZK can secure your airline and reduce costs</p>
+            
+            <div class="contact-grid">
+                <div class="contact-card">
+                    <h3 style="color: #4F46E5; margin-bottom: 1rem;">Partnership Inquiry</h3>
+                    <p style="color: #64748b; margin-bottom: 1.5rem;">Schedule a technical demo and discuss integration timeline</p>
+                    <a href="mailto:partnerships@proofzk.com?subject=Airline Partnership Inquiry" class="cta-button">partnerships@proofzk.com</a>
+                </div>
+                <div class="contact-card">
+                    <h3 style="color: #4F46E5; margin-bottom: 1rem;">Technical Integration</h3>
+                    <p style="color: #64748b; margin-bottom: 1.5rem;">Get API documentation and implementation support</p>
+                    <a href="mailto:tech@proofzk.com?subject=Technical Integration" class="cta-button">tech@proofzk.com</a>
+                </div>
+                <div class="contact-card">
+                    <h3 style="color: #4F46E5; margin-bottom: 1rem;">Executive Briefing</h3>
+                    <p style="color: #64748b; margin-bottom: 1.5rem;">C-level presentation on ROI and risk reduction</p>
+                    <a href="mailto:executive@proofzk.com?subject=Executive Briefing Request" class="cta-button">executive@proofzk.com</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 ProofZK. Privacy-first identity verification for enterprises.</p>
+            <p style="margin-top: 0.5rem; opacity: 0.7;">Built with zero-knowledge cryptography • No customer data stored</p>
+        </div>
+    </footer>
+
+    <script>
+        function calculateROI() {
+            const passengers = parseInt(document.getElementById('passengers').value) || 0;
+            
+            const traditionalCost = passengers * 15.0;
+            const proofzkCost = passengers * 0.5;
+            const annualSavings = traditionalCost - proofzkCost;
+            const savingsPercentage = ((annualSavings / traditionalCost) * 100).toFixed(1);
+            
+            // Implementation cost and break-even calculation
+            const implementationCost = 50000;
+            const dailySavings = annualSavings / 365;
+            const breakEvenDays = Math.ceil(implementationCost / dailySavings);
+            
+            const results = `
+                <div class="roi-result">
+                    <div class="roi-value">$${annualSavings.toLocaleString()}</div>
+                    <div class="stat-label">Annual Savings</div>
+                </div>
+                <div class="roi-result">
+                    <div class="roi-value">${savingsPercentage}%</div>
+                    <div class="stat-label">Cost Reduction</div>
+                </div>
+                <div class="roi-result">
+                    <div class="roi-value">${breakEvenDays}</div>
+                    <div class="stat-label">Days to Break Even</div>
+                </div>
+                <div class="roi-result">
+                    <div class="roi-value">$${(annualSavings * 5).toLocaleString()}</div>
+                    <div class="stat-label">5-Year Savings</div>
+                </div>
+            `;
+            
+            document.getElementById('roiResults').innerHTML = results;
+        }
+        
+        // Calculate initial ROI
+        calculateROI();
+        
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
