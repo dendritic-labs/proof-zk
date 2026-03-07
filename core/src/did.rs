@@ -1,20 +1,20 @@
-use serde::{Deserialize, Serialize};
-use ed25519_dalek::{SigningKey, VerifyingKey, Signature, Signer, Verifier};
-use uuid::Uuid;
+use crate::{DidDocument, PublicKeyEntry, Result, ServiceEndpoint};
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use chrono::Utc;
-use crate::{DidDocument, PublicKeyEntry, ServiceEndpoint, Result};
-use std::collections::HashMap;
+use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use rand::rngs::OsRng;
 use rand::RngCore;
-use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DidMethod {
-    Key,      // did:key - cryptographic keys
-    Web,      // did:web - web-based DIDs
-    Ion,      // did:ion - Bitcoin-anchored
-    Ethr,     // did:ethr - Ethereum-based
-    ProofZK,  // did:proofzk - our custom method
+    Key,     // did:key - cryptographic keys
+    Web,     // did:web - web-based DIDs
+    Ion,     // did:ion - Bitcoin-anchored
+    Ethr,    // did:ethr - Ethereum-based
+    ProofZK, // did:proofzk - our custom method
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -44,15 +44,15 @@ impl DidIdentity {
         OsRng.fill_bytes(&mut secret_bytes);
         let signing_key = SigningKey::from_bytes(&secret_bytes);
         let public_key_bytes = signing_key.verifying_key().to_bytes();
-        
+
         // Create DID:key according to spec
         let multicodec_prefix = [0xed, 0x01]; // ed25519-pub multicodec
         let mut key_bytes = Vec::new();
         key_bytes.extend_from_slice(&multicodec_prefix);
         key_bytes.extend_from_slice(&public_key_bytes);
-        
+
         let did = format!("did:key:z{}", bs58::encode(&key_bytes).into_string());
-        
+
         let document = DidDocument {
             id: did.clone(),
             public_keys: vec![PublicKeyEntry {
@@ -83,12 +83,12 @@ impl DidIdentity {
         OsRng.fill_bytes(&mut secret_bytes);
         let signing_key = SigningKey::from_bytes(&secret_bytes);
         let public_key_bytes = signing_key.verifying_key().to_bytes();
-        
+
         let did = match path {
             Some(p) => format!("did:web:{}:{}", domain, p.replace('/', ":")),
             None => format!("did:web:{}", domain),
         };
-        
+
         let document = DidDocument {
             id: did.clone(),
             public_keys: vec![PublicKeyEntry {
@@ -106,7 +106,7 @@ impl DidIdentity {
                     id: format!("{}#did-web-endpoint", did),
                     service_type: "DIDWebEndpoint".to_string(),
                     endpoint: format!("https://{}/.well-known/did.json", domain),
-                }
+                },
             ],
             created: Utc::now(),
             updated: Utc::now(),
@@ -127,7 +127,7 @@ impl DidIdentity {
         let signing_key = SigningKey::from_bytes(&secret_bytes);
         let public_key = BASE64.encode(signing_key.verifying_key().to_bytes());
         let did = format!("did:proofzk:{}", Uuid::new_v4());
-        
+
         let document = DidDocument {
             id: did.clone(),
             public_keys: vec![PublicKeyEntry {
@@ -154,7 +154,7 @@ impl DidIdentity {
 
     pub fn from_document(document: DidDocument) -> Self {
         let method = Self::parse_did_method(&document.id);
-        
+
         Self {
             did: document.id.clone(),
             method,
@@ -185,11 +185,12 @@ impl DidIdentity {
                     BASE64.decode(&pk_entry.public_key_base58)?
                 }
             };
-            
+
             let pk_bytes = &pk_bytes[pk_bytes.len().saturating_sub(32)..];
-            let verifying_key = VerifyingKey::from_bytes(pk_bytes.try_into().map_err(|_| "Invalid key length")?)?;
+            let verifying_key =
+                VerifyingKey::from_bytes(pk_bytes.try_into().map_err(|_| "Invalid key length")?)?;
             let sig = Signature::from_slice(signature)?;
-            
+
             Ok(verifying_key.verify(message, &sig).is_ok())
         } else {
             Err("No public key found in DID document".into())
@@ -205,7 +206,7 @@ impl DidIdentity {
         if !matches!(self.method, DidMethod::Web) {
             return Err("Not a did:web identity".into());
         }
-        
+
         Ok(serde_json::to_string_pretty(&self.document)?)
     }
 
@@ -242,7 +243,8 @@ impl UniversalDidResolver {
 
     /// Register a DID document locally
     pub fn register(&mut self, did_document: DidDocument) -> Result<()> {
-        self.local_registry.insert(did_document.id.clone(), did_document);
+        self.local_registry
+            .insert(did_document.id.clone(), did_document);
         Ok(())
     }
 
@@ -270,12 +272,14 @@ impl UniversalDidResolver {
     /// Resolve did:key (cryptographically derived)
     async fn resolve_did_key(&self, did: &str) -> Result<Option<DidDocument>> {
         // Extract key from DID
-        let key_part = did.strip_prefix("did:key:z").ok_or("Invalid did:key format")?;
+        let key_part = did
+            .strip_prefix("did:key:z")
+            .ok_or("Invalid did:key format")?;
         let key_bytes = bs58::decode(key_part).into_vec()?;
-        
+
         // Skip multicodec prefix (first 2 bytes for ed25519)
         let public_key_bytes = &key_bytes[2..];
-        
+
         let document = DidDocument {
             id: did.to_string(),
             public_keys: vec![PublicKeyEntry {
@@ -294,7 +298,9 @@ impl UniversalDidResolver {
     /// Resolve did:web (web-hosted)
     async fn resolve_did_web(&self, did: &str) -> Result<Option<DidDocument>> {
         // Convert DID to URL
-        let domain_path = did.strip_prefix("did:web:").ok_or("Invalid did:web format")?;
+        let domain_path = did
+            .strip_prefix("did:web:")
+            .ok_or("Invalid did:web format")?;
         let url_path = domain_path.replace(':', "/");
         let url = format!("https://{}/.well-known/did.json", url_path);
 
@@ -311,8 +317,11 @@ impl UniversalDidResolver {
     /// Resolve did:ion (Microsoft ION)
     async fn resolve_did_ion(&self, did: &str) -> Result<Option<DidDocument>> {
         // Use Microsoft's ION resolver
-        let url = format!("https://beta.discover.did.microsoft.com/1.0/identifiers/{}", did);
-        
+        let url = format!(
+            "https://beta.discover.did.microsoft.com/1.0/identifiers/{}",
+            did
+        );
+
         match self.http_client.get(&url).send().await {
             Ok(response) if response.status().is_success() => {
                 let doc: DidDocument = response.json().await?;
@@ -326,7 +335,7 @@ impl UniversalDidResolver {
     async fn resolve_did_ethr(&self, did: &str) -> Result<Option<DidDocument>> {
         // Use uPort's universal resolver
         let url = format!("https://dev.uniresolver.io/1.0/identifiers/{}", did);
-        
+
         match self.http_client.get(&url).send().await {
             Ok(response) if response.status().is_success() => {
                 let resolver_response: serde_json::Value = response.json().await?;

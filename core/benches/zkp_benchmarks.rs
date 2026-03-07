@@ -13,44 +13,43 @@ fn bench_age_proof_generation(c: &mut Criterion) {
 
 fn bench_age_proof_verification(c: &mut Criterion) {
     let proof = ZkProofSystem::prove_age_over(25, 21).unwrap();
-    
+
     c.bench_function("age_proof_verification", |b| {
-        b.iter(|| {
-            ZkProofSystem::verify_age_proof(black_box(&proof), black_box(21)).unwrap()
-        })
+        b.iter(|| ZkProofSystem::verify_age_proof(black_box(&proof), black_box(21)).unwrap())
     });
 }
 
 fn bench_genetic_proof_generation(c: &mut Criterion) {
     let user_markers = vec![
-        "BRCA1".to_string(), "BRCA2".to_string(), "TP53".to_string(),
-        "ATM".to_string(), "PALB2".to_string(), "CHEK2".to_string()
+        "BRCA1".to_string(),
+        "BRCA2".to_string(),
+        "TP53".to_string(),
+        "ATM".to_string(),
+        "PALB2".to_string(),
+        "CHEK2".to_string(),
     ];
     let required_markers = vec!["BRCA1".to_string(), "BRCA2".to_string()];
-    
+
     c.bench_function("genetic_proof_generation", |b| {
         b.iter(|| {
             ZkProofSystem::prove_genetic_markers(
-                black_box(&user_markers), 
-                black_box(&required_markers)
-            ).unwrap()
+                black_box(&user_markers),
+                black_box(&required_markers),
+            )
+            .unwrap()
         })
     });
 }
 
 fn bench_genetic_proof_verification(c: &mut Criterion) {
-    let user_markers = vec![
-        "BRCA1".to_string(), "BRCA2".to_string(), "TP53".to_string()
-    ];
+    let user_markers = vec!["BRCA1".to_string(), "BRCA2".to_string(), "TP53".to_string()];
     let required_markers = vec!["BRCA1".to_string(), "BRCA2".to_string()];
     let proof = ZkProofSystem::prove_genetic_markers(&user_markers, &required_markers).unwrap();
-    
+
     c.bench_function("genetic_proof_verification", |b| {
         b.iter(|| {
-            ZkProofSystem::verify_genetic_proof(
-                black_box(&proof), 
-                black_box(&required_markers)
-            ).unwrap()
+            ZkProofSystem::verify_genetic_proof(black_box(&proof), black_box(&required_markers))
+                .unwrap()
         })
     });
 }
@@ -60,7 +59,7 @@ fn bench_batch_age_verification(c: &mut Criterion) {
     let proofs: Vec<_> = (18..28u8)
         .map(|age| ZkProofSystem::prove_age_over(age, 21).unwrap())
         .collect();
-    
+
     c.bench_function("batch_age_verification_10_proofs", |b| {
         b.iter(|| {
             for proof in black_box(&proofs) {

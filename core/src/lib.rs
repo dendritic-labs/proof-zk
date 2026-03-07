@@ -1,13 +1,13 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 pub mod did;
-pub mod zkp;
-pub mod wallet;
 pub mod proofs;
-pub mod storage; // New secure storage module
+pub mod storage;
+pub mod wallet;
+pub mod zkp; // New secure storage module
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProofRequest {

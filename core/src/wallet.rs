@@ -1,6 +1,6 @@
+use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::Result;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum WalletProvider {
@@ -55,7 +55,8 @@ impl WalletIntegration {
     /// Register a wallet credential for selective disclosure
     pub async fn register_wallet_credential(&mut self, credential: WalletCredential) -> Result<()> {
         // In production, this would validate the wallet signature
-        self.registered_credentials.insert(credential.id.clone(), credential);
+        self.registered_credentials
+            .insert(credential.id.clone(), credential);
         Ok(())
     }
 
@@ -65,7 +66,8 @@ impl WalletIntegration {
         credential_id: &str,
         request: SelectiveDisclosureRequest,
     ) -> Result<WalletResponse> {
-        let credential = self.registered_credentials
+        let credential = self
+            .registered_credentials
             .get(credential_id)
             .ok_or("Credential not found")?;
 
@@ -73,9 +75,9 @@ impl WalletIntegration {
         // 1. Send request to actual wallet
         // 2. User approves/denies in wallet UI
         // 3. Wallet returns only approved fields
-        
+
         let disclosed_fields = self.simulate_selective_disclosure(&request)?;
-        
+
         Ok(WalletResponse {
             credential_id: credential_id.to_string(),
             disclosed_fields,
@@ -144,7 +146,7 @@ impl WalletIntegration {
         request: &SelectiveDisclosureRequest,
     ) -> Result<HashMap<String, serde_json::Value>> {
         let mut disclosed = HashMap::new();
-        
+
         // Simulate user approving specific fields
         for field in &request.fields_requested {
             if let Some(&include) = request.selective_fields.get(field) {
@@ -161,14 +163,15 @@ impl WalletIntegration {
                 }
             }
         }
-        
+
         Ok(disclosed)
     }
 
     fn generate_proof_of_possession(&self, credential: &WalletCredential) -> Result<Vec<u8>> {
         // Simplified proof - in production, use proper wallet signatures
-        let proof_data = format!("proof_of_possession:{}:{}", 
-            credential.id, 
+        let proof_data = format!(
+            "proof_of_possession:{}:{}",
+            credential.id,
             chrono::Utc::now().timestamp()
         );
         Ok(proof_data.into_bytes())
