@@ -219,8 +219,6 @@ impl DidIdentity {
             DidMethod::Ion
         } else if did.starts_with("did:ethr:") {
             DidMethod::Ethr
-        } else if did.starts_with("did:proofzk:") {
-            DidMethod::ProofZK
         } else {
             DidMethod::ProofZK // Default fallback
         }

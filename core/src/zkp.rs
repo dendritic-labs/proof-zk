@@ -75,8 +75,7 @@ impl ZkProofSystem {
             response,
             public_inputs: required_markers
                 .iter()
-                .map(|m| m.as_bytes().to_vec())
-                .flatten()
+                .flat_map(|m| m.as_bytes().to_vec())
                 .collect(),
         };
 
@@ -129,7 +128,7 @@ impl ZkProofSystem {
 
         // Use a hash-to-field approach compatible with curve25519-dalek v4
         let mut hasher = Sha256::new();
-        hasher.update(&sum.to_le_bytes());
+        hasher.update(sum.to_le_bytes());
         let hash_result = hasher.finalize();
 
         // Convert to RistrettoPoint using from_uniform_bytes
