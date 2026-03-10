@@ -36,7 +36,7 @@ rand = "0.8"
 tokio = { version = "1.35", features = ["full"] }
 
 # HTTP client for wallet integration
-reqwest = { version = "0.12.4", features = ["json"] }
+reqwest = { version = "0.12.4", default-features = false, features = ["json", "rustls-tls"] }
 
 # DID support
 bs58 = "0.4"
