@@ -166,8 +166,8 @@ jobs:
     - name: Run performance benchmarks
       run: |
         cd core
-        cargo bench --bench zkp_benchmarks --release
-        
+        cargo bench --bench zkp_benchmarks -- --release
+
   minimal_versions:
     name: Minimal Versions
     runs-on: ubuntu-latest

@@ -359,8 +359,8 @@ mod tests {
         fn prop_commitment_different_values(value1 in 0u64..1000, value2 in 0u64..1000) {
             prop_assume!(value1 != value2);
 
-            let commitment1 = ZkProofSystem::generate_commitment(&vec![value1]).unwrap();
-            let commitment2 = ZkProofSystem::generate_commitment(&vec![value2]).unwrap();
+            let commitment1 = ZkProofSystem::generate_commitment(&[value1]).unwrap();
+            let commitment2 = ZkProofSystem::generate_commitment(&[value2]).unwrap();
 
             // Different inputs should produce different commitments
             prop_assert_ne!(commitment1, commitment2);
