@@ -1,5 +1,4 @@
 use proofzk_core::did::*;
-use proofzk_core::proofs::*;
 use proofzk_core::wallet::*;
 use proofzk_core::*;
 use serde::{Deserialize, Serialize};
@@ -292,10 +291,10 @@ async fn generate_travel_authorization_proof(
     passport: &PassportCredential,
     visa: &VisaCredential,
     flight_request: &AirlineProofRequest,
-    wallet: &WalletIntegration,
+    _wallet: &WalletIntegration,
 ) -> Result<serde_json::Value> {
     // Generate selective disclosure request
-    let disclosure_request = SelectiveDisclosureRequest {
+    let _disclosure_request = SelectiveDisclosureRequest {
         fields_requested: vec![
             "passport_valid".to_string(),
             "visa_valid".to_string(),
@@ -401,7 +400,7 @@ async fn create_travel_presentation(
     }))
 }
 
-async fn verify_travel_presentation(presentation: &serde_json::Value) -> Result<bool> {
+async fn verify_travel_presentation(_presentation: &serde_json::Value) -> Result<bool> {
     // In production, this would:
     // 1. Verify government DID signatures
     // 2. Check government credential validity

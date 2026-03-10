@@ -1,7 +1,6 @@
 use proofzk_core::proofs::*;
 use proofzk_core::wallet::*;
 use proofzk_core::*;
-use std::collections::HashMap;
 
 /// Airline check-in demo showing privacy-preserving age verification
 #[tokio::main]
@@ -24,7 +23,7 @@ async fn main() -> Result<()> {
     );
 
     // Create ephemeral session for this transaction
-    let session_data = serde_json::json!({
+    let _session_data = serde_json::json!({
         "transaction_type": "age_verification",
         "requester": "airline_checkin",
         "flight": "UA123",

@@ -1,7 +1,6 @@
 use proofzk_core::did::*;
 use proofzk_core::storage::*;
 use proofzk_core::*;
-use std::io::{self, Write};
 
 /// Demo: Customer DID storage without native wallet support
 #[tokio::main]
@@ -142,7 +141,7 @@ async fn demo_browser_storage() -> Result<()> {
     Ok(())
 }
 
-async fn demo_airline_usage(customer_did: &DidIdentity) -> Result<()> {
+async fn demo_airline_usage(_customer_did: &DidIdentity) -> Result<()> {
     println!("   Generating age proof for airline check-in...");
 
     // Customer proves they're over 18 without revealing exact age

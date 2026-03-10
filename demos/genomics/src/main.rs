@@ -34,7 +34,7 @@ async fn main() -> Result<()> {
     println!("   (Full genome NOT requested or accessed)\n");
 
     // Create ephemeral session for this genomics transaction
-    let session_data = serde_json::json!({
+    let _session_data = serde_json::json!({
         "transaction_type": "genetic_marker_verification",
         "requester": "personalized_health_service",
         "requested_markers": requested_markers,
