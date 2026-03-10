@@ -1,8 +1,8 @@
-use chrono::{DateTime, Utc};
+use chrono::DateTime;
 /// Integration tests for ProofZK system components
 use proofzk_core::{
-    zkp::{AgeProof, GeneticMarkerProof, ZkProofSystem},
-    ProofRequest, ProofType, ZkProof,
+    zkp::{AgeProof, ZkProofSystem},
+    ProofRequest, ProofType,
 };
 use std::time::SystemTime;
 use uuid::Uuid;
@@ -25,17 +25,41 @@ async fn test_end_to_end_age_verification_flow() {
         expires_at: DateTime::from(SystemTime::now()) + chrono::Duration::hours(1),
     };
 
-    // 2. Generate proof (from passenger's device)
-    let age_proof = ZkProofSystem::prove_age_over(passenger_age, required_min_age)
+    // Validate proof request structure
+    assert_eq!(proof_request.requester, "Delta Airlines");
+    assert_eq!(
+        proof_request.required_claims,
+        vec!["age_over_21".to_string()]
+    );
+
+    // Extract requirements from proof request
+    let min_age_from_request =
+        if let ProofType::AgeVerification { min_age } = proof_request.proof_type {
+            assert_eq!(min_age, required_min_age);
+            min_age
+        } else {
+            panic!("Expected AgeVerification proof type");
+        };
+
+    // 2. Generate proof (from passenger's device) using requirements from proof request
+    let age_proof = ZkProofSystem::prove_age_over(passenger_age, min_age_from_request)
         .expect("Should generate valid age proof");
 
-    // 3. Verify proof (by airline system)
-    let verification_result = ZkProofSystem::verify_age_proof(&age_proof, required_min_age)
+    // 3. Verify proof (by airline system) using requirements from proof request
+    let verification_result = ZkProofSystem::verify_age_proof(&age_proof, min_age_from_request)
         .expect("Should verify proof without error");
 
+    // 4. Verify proof satisfies the original request
     assert!(verification_result);
-    assert_eq!(age_proof.min_age, required_min_age);
+    assert_eq!(age_proof.min_age, min_age_from_request);
+    assert_eq!(age_proof.min_age, required_min_age); // Consistency check
     assert!(age_proof.is_over_age);
+
+    // 5. Verify the proof answers the required claims
+    assert_eq!(
+        proof_request.required_claims[0],
+        format!("age_over_{}", min_age_from_request)
+    );
 }
 
 #[tokio::test]
@@ -63,18 +87,49 @@ async fn test_genetic_research_consent_flow() {
         expires_at: DateTime::from(SystemTime::now()) + chrono::Duration::days(30),
     };
 
-    // 2. Generate proof (from patient's secure health wallet)
+    // Validate proof request structure
+    assert_eq!(proof_request.requester, "Cancer Research Institute");
+    assert_eq!(
+        proof_request.required_claims,
+        vec!["brca_variant_status".to_string()]
+    );
+
+    // Extract requirements from proof request
+    let markers_from_request =
+        if let ProofType::GeneticMarker { markers } = &proof_request.proof_type {
+            assert_eq!(markers, &research_required_markers);
+            markers.clone()
+        } else {
+            panic!("Expected GeneticMarker proof type");
+        };
+
+    // 2. Generate proof (from patient's secure health wallet) using requirements from proof request
     let genetic_proof =
-        ZkProofSystem::prove_genetic_markers(&patient_genetic_markers, &research_required_markers)
+        ZkProofSystem::prove_genetic_markers(&patient_genetic_markers, &markers_from_request)
             .expect("Should generate valid genetic proof");
 
-    // 3. Verify proof (by research system)
+    // 3. Verify proof (by research system) using requirements from proof request
     let verification_result =
-        ZkProofSystem::verify_genetic_proof(&genetic_proof, &research_required_markers)
+        ZkProofSystem::verify_genetic_proof(&genetic_proof, &markers_from_request)
             .expect("Should verify proof without error");
 
+    // 4. Verify proof satisfies the original request
     assert!(verification_result);
-    assert_eq!(genetic_proof.markers_present.len(), 2);
+    assert_eq!(
+        genetic_proof.markers_present.len(),
+        markers_from_request.len()
+    );
+
+    // 5. Verify the proof contains exactly the markers requested
+    for marker in &markers_from_request {
+        assert!(
+            genetic_proof.markers_present.contains(marker),
+            "Proof should contain requested marker: {}",
+            marker
+        );
+    }
+
+    // Verify specific markers as expected
     assert!(genetic_proof.markers_present.contains(&"BRCA1".to_string()));
     assert!(genetic_proof.markers_present.contains(&"BRCA2".to_string()));
 
@@ -102,7 +157,6 @@ fn test_proof_serialization_deserialization() {
 
 #[test]
 fn test_multiple_concurrent_proofs() {
-    use std::sync::Arc;
     use std::thread;
 
     let handles: Vec<_> = (0..10)

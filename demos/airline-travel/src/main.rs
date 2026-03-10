@@ -293,12 +293,21 @@ async fn generate_travel_authorization_proof(
     flight_request: &AirlineProofRequest,
     _wallet: &WalletIntegration,
 ) -> Result<serde_json::Value> {
+    // Extract age requirement from flight request
+    let mut age_field_name = "age_over_18".to_string(); // default fallback
+    for proof_type in &flight_request.required_proofs {
+        if let TravelProofType::AgeVerification { min_age } = proof_type {
+            age_field_name = format!("age_over_{}", min_age);
+            break;
+        }
+    }
+
     // Generate selective disclosure request
     let _disclosure_request = SelectiveDisclosureRequest {
         fields_requested: vec![
             "passport_valid".to_string(),
             "visa_valid".to_string(),
-            "age_over_18".to_string(),
+            age_field_name.clone(),
             "nationality_authorized".to_string(),
         ],
         purpose: format!(
@@ -310,7 +319,7 @@ async fn generate_travel_authorization_proof(
             let mut fields = HashMap::new();
             fields.insert("passport_valid".to_string(), true);
             fields.insert("visa_valid".to_string(), true);
-            fields.insert("age_over_18".to_string(), true);
+            fields.insert(age_field_name.clone(), true);
             fields.insert("nationality_authorized".to_string(), true);
             // Explicitly exclude sensitive data
             fields.insert("passport_number".to_string(), false);
@@ -335,7 +344,7 @@ async fn generate_travel_authorization_proof(
                 "visa_valid".to_string(),
                 serde_json::Value::Bool(visa.valid_until > chrono::Utc::now()),
             );
-            fields.insert("age_over_18".to_string(), serde_json::Value::Bool(true));
+            fields.insert(age_field_name, serde_json::Value::Bool(true));
             fields.insert(
                 "nationality_authorized".to_string(),
                 serde_json::Value::Bool(passport.nationality == "Canadian"),

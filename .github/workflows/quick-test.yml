@@ -42,7 +42,7 @@ jobs:
       run: cargo test --workspace
       
     - name: Run integration tests
-      run: cargo test --test integration_tests
+      run: cargo test -p proofzk-core --test integration_tests
       
     - name: Test examples compile
       run: cargo build --examples

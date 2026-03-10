@@ -8,11 +8,12 @@ async fn main() -> Result<()> {
     let mut proof_system = ProofZK::new();
 
     // Example: Age verification request
+    let min_age = 18;
     let age_request = ProofRequest {
         id: uuid::Uuid::new_v4(),
         requester: "airline-checkin-service".to_string(),
-        proof_type: ProofType::AgeVerification { min_age: 18 },
-        required_claims: vec!["age_over_18".to_string()],
+        proof_type: ProofType::AgeVerification { min_age },
+        required_claims: vec![format!("age_over_{}", min_age)],
         context: "airline_boarding".to_string(),
         expires_at: chrono::Utc::now() + chrono::Duration::minutes(5),
     };

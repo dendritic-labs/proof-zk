@@ -27,14 +27,16 @@ pub async fn create_age_verification_proof(
     // Generate ZK proof without revealing actual age
     let zk_proof = ZkProofSystem::prove_age_over(user_age, min_age)?;
 
+    let age_field_name = format!("age_over_{}", min_age);
+
     // Request selective disclosure from wallet (just age verification, not birthdate)
     let _disclosure_request = SelectiveDisclosureRequest {
-        fields_requested: vec!["age_over_18".to_string()],
+        fields_requested: vec![age_field_name.clone()],
         purpose: "airline_age_verification".to_string(),
         requester_did: "did:proofzk:airline-system".to_string(),
         selective_fields: {
             let mut fields = std::collections::HashMap::new();
-            fields.insert("age_over_18".to_string(), true);
+            fields.insert(age_field_name.clone(), true);
             fields.insert("birthdate".to_string(), false); // Not disclosed
             fields.insert("name".to_string(), false); // Not disclosed
             fields
@@ -46,10 +48,7 @@ pub async fn create_age_verification_proof(
         credential_id: "mock_credential".to_string(),
         disclosed_fields: {
             let mut fields = std::collections::HashMap::new();
-            fields.insert(
-                "age_over_18".to_string(),
-                serde_json::Value::Bool(user_age >= min_age),
-            );
+            fields.insert(age_field_name, serde_json::Value::Bool(user_age >= min_age));
             fields
         },
         proof_of_possession: vec![0u8; 32], // Mock signature
@@ -118,10 +117,12 @@ pub async fn verify_age_proof_complete(
     // Verify ZK proof
     let zk_valid = ZkProofSystem::verify_age_proof(proof, min_age)?;
 
+    let age_field_name = format!("age_over_{}", min_age);
+
     // Verify wallet response consistency
     let wallet_valid = wallet_response
         .disclosed_fields
-        .get("age_over_18")
+        .get(&age_field_name)
         .and_then(|v| v.as_bool())
         .unwrap_or(false);
 

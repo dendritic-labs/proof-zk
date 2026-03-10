@@ -152,12 +152,15 @@ impl WalletIntegration {
             if let Some(&include) = request.selective_fields.get(field) {
                 if include {
                     // Add mock data - in production this comes from wallet
-                    let value = match field.as_str() {
-                        "age_over_18" => serde_json::Value::Bool(true),
-                        "age_over_21" => serde_json::Value::Bool(true),
-                        "name" => serde_json::Value::String("John Doe".to_string()),
-                        "genetic_marker_brca1" => serde_json::Value::Bool(false),
-                        _ => serde_json::Value::String(format!("mock_{}", field)),
+                    let value = if field.starts_with("age_over_") {
+                        // Handle any age_over_X field dynamically
+                        serde_json::Value::Bool(true)
+                    } else {
+                        match field.as_str() {
+                            "name" => serde_json::Value::String("John Doe".to_string()),
+                            "genetic_marker_brca1" => serde_json::Value::Bool(false),
+                            _ => serde_json::Value::String(format!("mock_{}", field)),
+                        }
                     };
                     disclosed.insert(field.clone(), value);
                 }

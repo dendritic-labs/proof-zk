@@ -71,7 +71,7 @@ jobs:
     - name: Run property tests
       run: |
         cd core
-        cargo test --test="" -- --ignored prop_
+        cargo test prop_ -- --ignored
       env:
         PROPTEST_CASES: 1000
 
@@ -166,9 +166,8 @@ jobs:
     - name: Run performance benchmarks
       run: |
         cd core
-        cargo test bench_tests::bench_age_proof_generation_performance --release
-        cargo test bench_tests::bench_genetic_proof_performance --release
-
+        cargo bench --bench zkp_benchmarks --release
+        
   minimal_versions:
     name: Minimal Versions
     runs-on: ubuntu-latest
