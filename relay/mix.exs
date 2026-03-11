@@ -23,13 +23,15 @@ defmodule Relay.MixProject do
   defp deps do
     [
       {:phoenix, "~> 1.7.10"},
+      {:phoenix_html, "~> 4.0"},
       {:phoenix_live_dashboard, "~> 0.8.2"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
       {:cors_plug, "~> 3.0"},
-      {:uuid, "~> 1.1"}
+      {:uuid, "~> 1.1"},
+      {:gettext, "~> 0.20"}
     ]
   end
 end

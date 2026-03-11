@@ -1,7 +1,12 @@
 defmodule Relay.Application do
   @moduledoc """
   Ephemeral relay service for ProofZK
-  Handles temporary data sessions that disappear after transactions
+
+  Redesigned for high-performance session management:
+  - ETS-based storage for millions of concurrent sessions
+  - Single cleanup process for efficiency
+  - Fault-tolerant supervision tree
+  - Built-in observability and monitoring
   """
 
   use Application
@@ -9,16 +14,10 @@ defmodule Relay.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Start the registry for dynamic session processes
-      {Registry, keys: :unique, name: Relay.SessionRegistry},
+      # High-performance ETS-based session storage
+      Relay.SessionStore,
 
-      # Start the session supervisor
-      {DynamicSupervisor, name: Relay.SessionSupervisor, strategy: :one_for_one},
-
-      # Start the cleanup agent for expired sessions
-      Relay.SessionCleaner,
-
-      # Start the Phoenix endpoint
+      # Phoenix endpoint for HTTP API
       RelayWeb.Endpoint
     ]
 
