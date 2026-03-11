@@ -45,6 +45,7 @@ num-bigint = "0.4.6"
 
 # Explicit version pinning for compatibility
 subtle = "2.6"
+log = "0.4.22"
 
 # WASM support for browser
 [target.'cfg(target_arch = "wasm32")'.dependencies]
