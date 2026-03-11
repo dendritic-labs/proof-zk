@@ -9,6 +9,9 @@ docs/rust-technical-presentation.md
 docs/1password-integration-concept.md
 docs/airline-partnership-strategy.md
 
+# Private Application Materials  
+1password/
+
 # Rust Build Artifacts
 /target/
 **/*.rs.bk

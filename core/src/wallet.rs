@@ -1,6 +1,6 @@
+use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::{Result, DidDocument};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum WalletProvider {
@@ -36,14 +36,14 @@ pub struct WalletResponse {
 }
 
 pub struct WalletIntegration {
-    supported_wallets: Vec<WalletProvider>,
+    _supported_wallets: Vec<WalletProvider>,
     registered_credentials: HashMap<String, WalletCredential>,
 }
 
 impl WalletIntegration {
     pub fn new() -> Self {
         Self {
-            supported_wallets: vec![
+            _supported_wallets: vec![
                 WalletProvider::Apple,
                 WalletProvider::Google,
                 WalletProvider::Samsung,
@@ -55,7 +55,8 @@ impl WalletIntegration {
     /// Register a wallet credential for selective disclosure
     pub async fn register_wallet_credential(&mut self, credential: WalletCredential) -> Result<()> {
         // In production, this would validate the wallet signature
-        self.registered_credentials.insert(credential.id.clone(), credential);
+        self.registered_credentials
+            .insert(credential.id.clone(), credential);
         Ok(())
     }
 
@@ -65,7 +66,8 @@ impl WalletIntegration {
         credential_id: &str,
         request: SelectiveDisclosureRequest,
     ) -> Result<WalletResponse> {
-        let credential = self.registered_credentials
+        let credential = self
+            .registered_credentials
             .get(credential_id)
             .ok_or("Credential not found")?;
 
@@ -73,9 +75,9 @@ impl WalletIntegration {
         // 1. Send request to actual wallet
         // 2. User approves/denies in wallet UI
         // 3. Wallet returns only approved fields
-        
+
         let disclosed_fields = self.simulate_selective_disclosure(&request)?;
-        
+
         Ok(WalletResponse {
             credential_id: credential_id.to_string(),
             disclosed_fields,
@@ -144,31 +146,35 @@ impl WalletIntegration {
         request: &SelectiveDisclosureRequest,
     ) -> Result<HashMap<String, serde_json::Value>> {
         let mut disclosed = HashMap::new();
-        
+
         // Simulate user approving specific fields
         for field in &request.fields_requested {
             if let Some(&include) = request.selective_fields.get(field) {
                 if include {
                     // Add mock data - in production this comes from wallet
-                    let value = match field.as_str() {
-                        "age_over_18" => serde_json::Value::Bool(true),
-                        "age_over_21" => serde_json::Value::Bool(true),
-                        "name" => serde_json::Value::String("John Doe".to_string()),
-                        "genetic_marker_brca1" => serde_json::Value::Bool(false),
-                        _ => serde_json::Value::String(format!("mock_{}", field)),
+                    let value = if field.starts_with("age_over_") {
+                        // Handle any age_over_X field dynamically
+                        serde_json::Value::Bool(true)
+                    } else {
+                        match field.as_str() {
+                            "name" => serde_json::Value::String("John Doe".to_string()),
+                            "genetic_marker_brca1" => serde_json::Value::Bool(false),
+                            _ => serde_json::Value::String(format!("mock_{}", field)),
+                        }
                     };
                     disclosed.insert(field.clone(), value);
                 }
             }
         }
-        
+
         Ok(disclosed)
     }
 
     fn generate_proof_of_possession(&self, credential: &WalletCredential) -> Result<Vec<u8>> {
         // Simplified proof - in production, use proper wallet signatures
-        let proof_data = format!("proof_of_possession:{}:{}", 
-            credential.id, 
+        let proof_data = format!(
+            "proof_of_possession:{}:{}",
+            credential.id,
             chrono::Utc::now().timestamp()
         );
         Ok(proof_data.into_bytes())

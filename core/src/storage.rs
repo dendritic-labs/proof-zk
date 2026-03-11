@@ -1,8 +1,8 @@
-use serde::{Deserialize, Serialize};
 use crate::{did::DidIdentity, Result};
-use std::fs;
 use rand::RngCore;
-use sha2::{Sha256, Digest};
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
+use std::fs;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptedDidStorage {
@@ -20,7 +20,7 @@ impl LocalDidStore {
     pub fn new(app_data_dir: &str) -> Result<Self> {
         let storage_path = std::path::PathBuf::from(app_data_dir).join("proofzk_dids");
         fs::create_dir_all(&storage_path)?;
-        
+
         Ok(Self { storage_path })
     }
 
@@ -28,26 +28,26 @@ impl LocalDidStore {
     pub fn store_did(&self, did: &DidIdentity, password: &str) -> Result<String> {
         let did_json = serde_json::to_string(did)?;
         let key = Self::derive_key_from_password(password);
-        
+
         // Generate random nonce
         let mut nonce_bytes = [0u8; 12];
         rand::thread_rng().fill_bytes(&mut nonce_bytes);
-        
+
         // Simple XOR encryption (in production, use proper AES-GCM)
         let encrypted_did = Self::xor_encrypt(did_json.as_bytes(), &key, &nonce_bytes);
-        
+
         let storage = EncryptedDidStorage {
             encrypted_did,
             nonce: nonce_bytes.to_vec(),
             created_at: chrono::Utc::now(),
         };
-        
+
         // Save to file
         let did_id = Self::generate_did_id(&did.did);
         let file_path = self.storage_path.join(format!("{}.json", did_id));
         let storage_json = serde_json::to_string_pretty(&storage)?;
         fs::write(&file_path, storage_json)?;
-        
+
         Ok(did_id)
     }
 
@@ -56,20 +56,20 @@ impl LocalDidStore {
         let file_path = self.storage_path.join(format!("{}.json", did_id));
         let storage_json = fs::read_to_string(file_path)?;
         let storage: EncryptedDidStorage = serde_json::from_str(&storage_json)?;
-        
+
         let key = Self::derive_key_from_password(password);
-        
+
         let decrypted_bytes = Self::xor_decrypt(&storage.encrypted_did, &key, &storage.nonce);
         let did_json = String::from_utf8(decrypted_bytes)?;
         let did: DidIdentity = serde_json::from_str(&did_json)?;
-        
+
         Ok(did)
     }
 
     /// List all stored DID IDs
     pub fn list_stored_dids(&self) -> Result<Vec<String>> {
         let mut dids = Vec::new();
-        
+
         for entry in fs::read_dir(&self.storage_path)? {
             let entry = entry?;
             if let Some(name) = entry.file_name().to_str() {
@@ -79,7 +79,7 @@ impl LocalDidStore {
                 }
             }
         }
-        
+
         Ok(dids)
     }
 
@@ -87,7 +87,7 @@ impl LocalDidStore {
     pub fn export_as_qr_code(&self, did_id: &str) -> Result<String> {
         let file_path = self.storage_path.join(format!("{}.json", did_id));
         let storage_json = fs::read_to_string(file_path)?;
-        
+
         // Create QR-friendly format
         let qr_data = serde_json::json!({
             "type": "proofzk_did",
@@ -95,7 +95,7 @@ impl LocalDidStore {
             "data": storage_json,
             "app": "proofzk://import"
         });
-        
+
         Ok(qr_data.to_string())
     }
 
@@ -103,20 +103,20 @@ impl LocalDidStore {
     pub fn import_from_qr_code(&self, qr_data: &str, password: &str) -> Result<String> {
         let qr_json: serde_json::Value = serde_json::from_str(qr_data)?;
         let storage_json = qr_json["data"].as_str().ok_or("Invalid QR code format")?;
-        
+
         let storage: EncryptedDidStorage = serde_json::from_str(storage_json)?;
-        
+
         // Decrypt to verify it works with password
         let key = Self::derive_key_from_password(password);
         let decrypted_bytes = Self::xor_decrypt(&storage.encrypted_did, &key, &storage.nonce);
         let did_json = String::from_utf8(decrypted_bytes)?;
         let did: DidIdentity = serde_json::from_str(&did_json)?;
-        
+
         // Store locally
         let did_id = Self::generate_did_id(&did.did);
         let file_path = self.storage_path.join(format!("{}.json", did_id));
         fs::write(&file_path, storage_json)?;
-        
+
         Ok(did_id)
     }
 
@@ -145,8 +145,11 @@ impl LocalDidStore {
             let key_byte = key[i % 32] ^ nonce[i % nonce.len()];
             key_stream.push(key_byte);
         }
-        
-        data.iter().zip(key_stream.iter()).map(|(a, b)| a ^ b).collect()
+
+        data.iter()
+            .zip(key_stream.iter())
+            .map(|(a, b)| a ^ b)
+            .collect()
     }
 
     fn xor_decrypt(data: &[u8], key: &[u8; 32], nonce: &[u8]) -> Vec<u8> {
@@ -160,29 +163,37 @@ impl LocalDidStore {
 pub mod browser_storage {
     use super::*;
     use wasm_bindgen::prelude::*;
-    
+
     pub struct BrowserDidStore {
         db_name: String,
     }
-    
+
     impl BrowserDidStore {
         pub fn new() -> Self {
             Self {
                 db_name: "proofzk_dids".to_string(),
             }
         }
-        
+
         /// Store DID in browser's IndexedDB (encrypted)
-        pub async fn store_did_encrypted(&self, did: &DidIdentity, password: &str) -> Result<String> {
+        pub async fn store_did_encrypted(
+            &self,
+            did: &DidIdentity,
+            password: &str,
+        ) -> Result<String> {
             // Implementation for browser IndexedDB storage
             // Uses WebCrypto API for encryption
             let did_id = format!("browser_{}", uuid::Uuid::new_v4());
             // TODO: Implement actual browser storage
             Ok(did_id)
         }
-        
+
         /// Load DID from browser storage
-        pub async fn load_did_encrypted(&self, did_id: &str, password: &str) -> Result<DidIdentity> {
+        pub async fn load_did_encrypted(
+            &self,
+            did_id: &str,
+            password: &str,
+        ) -> Result<DidIdentity> {
             // TODO: Implement browser IndexedDB loading
             Err("Browser storage not yet implemented".into())
         }
@@ -198,26 +209,26 @@ mod tests {
     fn test_local_did_storage() {
         let temp_dir = std::env::temp_dir().join("proofzk_test");
         let store = LocalDidStore::new(temp_dir.to_str().unwrap()).unwrap();
-        
+
         // Create test DID
         let did = DidIdentity::new().unwrap();
         let password = "test_password_123";
-        
+
         // Store DID
         let did_id = store.store_did(&did, password).unwrap();
         assert!(!did_id.is_empty());
-        
+
         // Load DID back
         let loaded_did = store.load_did(&did_id, password).unwrap();
         assert_eq!(did.did, loaded_did.did);
-        
+
         // Test QR export/import
         let qr_data = store.export_as_qr_code(&did_id).unwrap();
         assert!(qr_data.contains("proofzk_did"));
-        
+
         // Test wrong password fails
         assert!(store.load_did(&did_id, "wrong_password").is_err());
-        
+
         // Cleanup
         std::fs::remove_dir_all(&temp_dir).ok();
     }

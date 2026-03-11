@@ -1,13 +1,13 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 pub mod did;
-pub mod zkp;
-pub mod wallet;
 pub mod proofs;
-pub mod storage; // New secure storage module
+pub mod storage;
+pub mod wallet;
+pub mod zkp; // New secure storage module
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProofRequest {
@@ -70,14 +70,14 @@ pub struct ServiceEndpoint {
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 pub struct ProofZK {
-    did_registry: HashMap<String, DidDocument>,
+    _did_registry: HashMap<String, DidDocument>,
     active_requests: HashMap<Uuid, ProofRequest>,
 }
 
 impl ProofZK {
     pub fn new() -> Self {
         Self {
-            did_registry: HashMap::new(),
+            _did_registry: HashMap::new(),
             active_requests: HashMap::new(),
         }
     }
