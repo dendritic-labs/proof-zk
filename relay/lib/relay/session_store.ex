@@ -147,20 +147,14 @@ defmodule Relay.SessionStore do
 
   defp cleanup_expired_sessions do
     now = System.monotonic_time(:millisecond)
-
-    # Select and delete expired sessions in batches for efficiency
-    expired_sessions = :ets.select(@table_name, [
-      {{:"$1", :_, :"$2"}, [{:<, :"$2", now}], [:"$1"]}
-    ])
-
-    Enum.each(expired_sessions, fn session_id ->
-      :ets.delete(@table_name, session_id)
-    end)
-
-    if length(expired_sessions) > 0 do
-      Logger.info("Cleaned up #{length(expired_sessions)} expired sessions")
+   # Delete all expired sessions and return the number of deleted entries
+    match_spec = [
+      {{:"$1", :_, :"$2"}, [{:<, :"$2", now}], [true]}
+    ]
+    deleted_count = :ets.select_delete(@table_name, match_spec)
+    if deleted_count > 0 do
+      Logger.info("Cleaned up #{deleted_count} expired sessions")
     end
-
-    expired_sessions
+    deleted_count
   end
 end
