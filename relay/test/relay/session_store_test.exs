@@ -143,13 +143,23 @@ defmodule Relay.SessionStoreTest do
 
       # Trigger cleanup (normally done by background process)
       GenServer.cast(SessionStore, :cleanup_expired)
-      Process.sleep(100)  # Allow cleanup to complete
-
-      # Short session should be cleaned up
-      assert {:error, :not_found} = SessionStore.get_and_destroy_session(short_id)
-
-      # Long session should still exist
-      assert {:ok, %{"long" => "ttl"}} = SessionStore.get_and_destroy_session(long_id)
+      # Wait (with retries) until cleanup has actually removed the expired session
+      wait_for_cleanup =
+        fn wait_for_cleanup, attempts_left ->
+          case SessionStore.get_and_destroy_session(short_id) do
+            {:error, :not_found} ->
+              # Short session has been cleaned up; long session should still exist
+              assert {:ok, %{"long" => "ttl"}} = SessionStore.get_and_destroy_session(long_id)
+            {:error, :expired} when attempts_left > 0 ->
+              # Cleanup has not yet run; wait a bit and retry
+              Process.sleep(50)
+              wait_for_cleanup.(wait_for_cleanup, attempts_left - 1)
+            other ->
+              flunk("Unexpected result while waiting for cleanup: #{inspect(other)}")
+          end
+        end
+      # Allow up to ~1 second total (20 * 50ms) for cleanup to complete
+      wait_for_cleanup.(wait_for_cleanup, 20)
     end
   end
 
